@@ -2177,7 +2177,7 @@ read_mafld(filename);
 global_MAF.resize(Nsnp,1);
 
 allgen_mail.resize(Nbin);  
-allgen.resize(Nbin);
+//allgen.resize(Nbin);
 
 double h2A=0;
 double h2D=0;
