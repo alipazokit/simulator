@@ -11,4 +11,12 @@ make
 ```
 
 
+```
+git clone https://github.com/alipazokit/simulator.git
+cd simulator
+mkdir build
+cd build/
+cmake ..
+make
 
+```
