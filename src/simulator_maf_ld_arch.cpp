@@ -1736,8 +1736,10 @@ void make_maf_ld_effect(double p_casual,double ld_ex,double maf_ex,double min_ma
 		}
 	}
 	
-				
-
+	//write effect sizes
+	outfile.open("effect_sizes.txt", std::ios_base::out);			
+	outfile<<A_effect_multi<<endl;
+	outfile.close(); 
        
 
 }
