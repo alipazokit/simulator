@@ -1,5 +1,5 @@
 # Biobank-Scale Simulator
-Two version is  available:
+Two versions are available:
 
 Simulator_mafld : simulates phenotypes based on a given MAF and LD dependent genetic articheture.
 
