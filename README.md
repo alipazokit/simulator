@@ -45,7 +45,7 @@ make
  
 It has M rows (M=number  of SNPs) and K columns (K=number of annotations). If SNP i belongs to annotation j, then there is  "1" in row i and column j.    Otherwise there is "0". (delimiter is " ")
 
-In the first line, please write the true value of variance components.
+In the first line, please write the true values of variance components.
 
 -o :output directory 
 -k : Number of phenotypes
