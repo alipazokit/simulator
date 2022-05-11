@@ -18,4 +18,5 @@ ADD_DEFINITIONS(-DDEBUG=${DEBUG})
 
 
 
-add_executable(Simulator src/simulator_maf_ld_arch.cpp src/genotype.cpp src/storage.cpp)
+add_executable(Simulator_mafld src/simulator_maf_ld_arch.cpp src/genotype.cpp src/storage.cpp)
+add_executable(Simulator_annot src/simulator.annot.cpp src/genotype.cpp src/storage.cpp)
