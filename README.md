@@ -10,41 +10,28 @@ cmake
 make
 ```
 
-## How to install :
 
 ```
-git clone https://github.com/alipazokit/RHE-mc.git
-cd RHE-mc
+git clone https://github.com/alipazokit/simulator.git
+cd simulator
 mkdir build
 cd build/
 cmake ..
 make
-```
 
-# Documentation for RHE-mc
-An executable file named RHEmc will be in build folder after the installation steps. Run RHE-mc as follows:
+```
+There is a toy example in the example folder (please take a look at test.sh file ).
+
+## Input arguments 
+```
+-g :
+ genotype file
+-annot :
+ annotation file (in case of single variance component, just provide a single column where all elements are equal to 1)
+-o :
+ output directory 
+-maf_ld :
+ the file which includes MAF and LD of SNPs. 
+-simul_par :
+ the  file which contains simulation parameters used in ((Eq.12)  in our paper ) . It has seven columns (percentage of causal SNPs, exponent of LD,exponent of MAF, min(MAF) of causal SNPs, max(MAF) of causal SNPs, total h2, number of simulations).
  ```
- ./RHEmc <command_line arguments>
-```
-## Parameters
-
-```
-genotype (-g) : The path of a text file which contains pathes of genotypes files.
-phenotype (-p): The path of phenotype file
-covariate (-c): The path of covariate file
-annotation (-annot): The path of annotation file.
-num_vec (-k) : The number of random vectors (10 is recommended)
-num_block (-jn): The number of jackknife blocks. (100 is recommended)
-out_put (-o): The path of output file.
-
-```
-## Toy example 
-To make sure that everything works well, sample files are provided in example directory. Run RHE-mc as follows:
-```
-../build/RHEmc -g adr.txt -c sample.cov -p sample.pheno.plink -k 10 -jn 100  -o out.txt -annot sample.annot.txt
-```
-
-
-
-
-

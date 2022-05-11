@@ -1736,8 +1736,10 @@ void make_maf_ld_effect(double p_casual,double ld_ex,double maf_ex,double min_ma
 		}
 	}
 	
-				
-
+	//write effect sizes
+	outfile.open("effect_sizes.txt", std::ios_base::out);			
+	outfile<<A_effect_multi<<endl;
+	outfile.close(); 
        
 
 }
@@ -2177,7 +2179,7 @@ read_mafld(filename);
 global_MAF.resize(Nsnp,1);
 
 allgen_mail.resize(Nbin);  
-allgen.resize(Nbin);
+//allgen.resize(Nbin);
 
 double h2A=0;
 double h2D=0;
