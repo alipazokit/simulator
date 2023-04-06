@@ -52,6 +52,8 @@ class data {
 };
 
 
+boost::mt19937 seedr;
+
 //Intermediate Variables
 int blocksize;
 int hsegsize;
@@ -800,8 +802,6 @@ MatrixXdr  compute_Xz (int num_snp,int bin_index,double h2){
 
 double beta=(double)h2/len[bin_index];
 
-boost::mt19937 seedr;
-seedr.seed(std::time(0));
 boost::normal_distribution<> dist(0,sqrt(beta));
 boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > effect_size(seedr, dist);
 
@@ -1448,12 +1448,12 @@ for(int i=0;i<num_snp;i++){
 }
 
 
-//double beta_ef=0;
 int main(int argc, char const *argv[]){
   
 
-boost::mt19937 seedr;
-seedr.seed(std::time(0));
+//boost::mt19937 seedr;
+seedr.seed(rdtsc());
+//seedr.seed(std::time(0));
 boost::normal_distribution<> dist(0,1);
 boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > effect_size(seedr, dist);
 
