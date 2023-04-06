@@ -37,6 +37,17 @@
 	#define fastmultiply_pre fastmultiply_pre_normal
 #endif
 
+#ifdef _WIN32
+#define rdtsc __rdtsc
+#else
+
+unsigned long long rdtsc(){
+    unsigned int lo,hi;
+    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((unsigned long long)hi << 32) | lo;
+}
+#endif
+
 using namespace Eigen;
 using namespace std;
 
@@ -52,6 +63,8 @@ class data {
      MatrixXdr maf;
 };
 
+// declare a single seedr that is seeded once at the start of main
+boost::mt19937 seedr;
 
 //Intermediate Variables
 int blocksize;
@@ -1671,30 +1684,53 @@ void read_simul_par(std::string filename){
 
 void make_maf_ld_effect(double p_casual,double ld_ex,double maf_ex,double min_maf,double max_maf,double h2,int num){
 
-        std::ofstream outfile;
+    std::ofstream outfile;
 	if(dominance==true){
 	outfile.open("causal_snp_dom.txt", std::ios_base::out);
 	}
 	else{
-        outfile.open("causal_snp_add.txt", std::ios_base::out);
+        outfile.open(command_line_opts.OUTPUT_FILE_PATH+".causal_snps_annot.txt", std::ios_base::out);
 	}
 	//MatrixXdr A_effect;
 	A_effect.resize(Nsnp,1);
         A_effect_multi.resize(Nsnp,num);
 
-	boost::mt19937 seedr;
-	seedr.seed(std::time(0));
-        boost::bernoulli_distribution<> b_dist(p_casual);
-        boost::variate_generator<boost::mt19937&, boost::bernoulli_distribution<>  > coin(seedr, b_dist);
+    // method 1: toss a coin (varying # of causals)
+	//boost::mt19937 seedr;
+    //seedr.seed(std::time(0));
+    //seed with rdtsc:
+    //seedr.seed(rdtsc());
+    boost::bernoulli_distribution<> b_dist(p_casual);
+    boost::variate_generator<boost::mt19937&, boost::bernoulli_distribution<>  > coin(seedr, b_dist);
+
 
 	MatrixXdr cas;
 	cas.resize(Nsnp,1);
-	for (int i=0;i<Nsnp;i++){
-	 cas(i,0)=coin();
-	 if(maf_ld(i,2)<min_maf || maf_ld(i,2)>max_maf)
-			cas(i,0)=0;
 
-	}
+    bool fix_ncausals = true;
+    if (!fix_ncausals){
+	    for (int i=0;i<Nsnp;i++){
+	        cas(i,0)=coin();
+	        if(maf_ld(i,2)<min_maf || maf_ld(i,2)>max_maf)
+		        cas(i,0)=0;
+	    }
+    }
+    else{
+        // method 2: random selection (fixed # of causals)
+        boost::uniform_int<> idxs(0, Nsnp-1);
+        boost::variate_generator<boost::mt19937&, boost::uniform_int<> > get_snp_idx(seedr, idxs);
+        int ncausals = p_casual*Nsnp;
+        for (int i=0; i<Nsnp; i++)
+            cas(i,0)=0;
+        while (ncausals != 0){
+            int tmp = get_snp_idx();
+            if ((cas(tmp, 0) == 0) && (maf_ld(tmp,2) >= min_maf) && (maf_ld(tmp,2) <= max_maf) ){
+                cas(tmp,0) = 1;
+                ncausals--;
+            }
+        }
+    }
+
 	cout<<cas.sum()<<endl;
 
 
@@ -1716,6 +1752,13 @@ void make_maf_ld_effect(double p_casual,double ld_ex,double maf_ex,double min_ma
 	//cout<<"c_ld_f"<<effect(0,0)<<endl;
 
 	double cons_fact=(double)h2/A_effect.sum();
+    
+    // Fix per-SNP heritability instead of total h2
+	//double cons_fact=(double)h2/Nsnp;
+    
+    cout << "h2: " << h2 << endl
+        << "cons_fact: " << cons_fact << endl
+        << "A_effect.sum(): " << A_effect.sum() << endl;
 
 	//cout<<"const"<<cons_fact<<endl;
 	
@@ -1735,19 +1778,18 @@ void make_maf_ld_effect(double p_casual,double ld_ex,double maf_ex,double min_ma
 
 		}
 	}
+
 	
-	//write effect sizes
-	outfile.open("effect_sizes.txt", std::ios_base::out);			
-	outfile<<A_effect_multi<<endl;
-	outfile.close(); 
+				
+
        
 
 }
 
 void make_dom_effect(double p_casual,double h2d,int num){
 
-	boost::mt19937 seedr;
-        seedr.seed(std::time(0));
+	//boost::mt19937 seedr;
+        //seedr.seed(std::time(0));
         boost::bernoulli_distribution<> b_dist(p_casual);
         boost::variate_generator<boost::mt19937&, boost::bernoulli_distribution<>  > coin(seedr, b_dist);
 
@@ -1929,7 +1971,7 @@ global_snp_index=-1;
 int point_index=0;
 for (int jack_index=0;jack_index<Njack;jack_index++){
 
-	cout<<"jack index"<<jack_index<<endl;
+	//cout<<"jack index"<<jack_index<<endl;
         int read_Nsnp=(jack_index<(Njack-1)) ? (step_size) : (step_size+step_size_rem);
 
        if(use_mailman==true){
@@ -2150,6 +2192,10 @@ read_annot(filename);
 filename=command_line_opts.PHENOTYPE_FILE_PATH;
 count_pheno(filename);
 
+
+//EDIT: seed the seedr once at the start of main
+seedr.seed(rdtsc());
+
 std::stringstream f0;
 f0 << geno_name << ".fam";
 string name_fam=f0.str();
@@ -2191,7 +2237,7 @@ num_simul=simul_par(6,0);
 
 Nz=num_simul;
 k=Nz;
-cout<<"number of simulations"<<num_simul<<endl;
+cout<<"number of simulations: "<<num_simul<<endl;
 
 simul_pheno=MatrixXdr::Zero(Nindv,num_simul);
 
@@ -2217,7 +2263,7 @@ process(name,1);
 
 
 
- boost::mt19937 seedr;
+//boost::mt19937 seedr;
 boost::normal_distribution<> dist(0,sqrt(1-h2A-h2D));
 boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > effect_env(seedr, dist);
 
@@ -2232,7 +2278,9 @@ for ( int i=0;i<num_simul;i++){
 	cout<<"writing "<<i<<"-th simulation"<<endl;
 
 	string index=boost::lexical_cast<string>(i);
-	string name=add_output+index+".pheno";
+	string name=add_output+index+".phen";
+    // for varying causal SNPs:
+	//string name=add_output+".phen";
 	std::ofstream outfile;
 	outfile.open(name, std::ios_base::out);
 	
